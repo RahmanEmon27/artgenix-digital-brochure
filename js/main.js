@@ -122,15 +122,22 @@
 
   // Filter chips (after the "All" chip already in the HTML)
   var filters = document.querySelector(".filters");
+  var countOf = { all: items.length };
+  items.forEach(function (it) { countOf[it[3]] = (countOf[it[3]] || 0) + 1; });
+  function countBadge(n) { return ' <span class="chip-count" aria-hidden="true">' + n + "</span>"; }
+  var allChip = filters.querySelector('[data-filter="all"]');
+  allChip.innerHTML = "All" + countBadge(items.length);
   cats.forEach(function (c) {
     var b = document.createElement("button");
     b.className = "chip";
     b.type = "button";
     b.dataset.filter = c[0];
     b.setAttribute("aria-pressed", "false");
-    b.textContent = c[1];
+    b.setAttribute("aria-label", c[1] + ", " + countOf[c[0]] + " photos");
+    b.innerHTML = c[1] + countBadge(countOf[c[0]]);
     filters.appendChild(b);
   });
+  allChip.setAttribute("aria-label", "All, " + items.length + " photos");
 
   // Grid order: take one photo from each category in turn, so "All" starts with a mix
   var byCat = {};
@@ -165,6 +172,8 @@
   var filter = "all";
   var moreWrap = document.getElementById("showMoreWrap");
   var moreBtn = document.getElementById("showMore");
+  var resultCount = document.getElementById("resultCount");
+  var filterBar = document.getElementById("filterBar");
   function columns() {
     return getComputedStyle(gallery).gridTemplateColumns.split(" ").filter(Boolean).length || 1;
   }
@@ -178,6 +187,8 @@
       if (match) n++;
     });
     var left = n - limit;
+    var shown = Math.min(n, limit);
+    resultCount.textContent = "Showing " + shown + " of " + n + (filter === "all" ? " creations" : " · " + label[filter]);
     moreWrap.hidden = left <= 0;
     moreBtn.textContent = "Show more (" + Math.max(left, 0) + ")";
   }
@@ -196,10 +207,31 @@
         c.classList.toggle("is-active", on);
         c.setAttribute("aria-pressed", on);
       });
+      // where the gallery starts on the page (filtering doesn't move it)
+      var wasDeep = gallery.getBoundingClientRect().top < filterBar.getBoundingClientRect().top;
+      var galleryDocTop = gallery.getBoundingClientRect().top + window.scrollY;
       rows = ROWS_STEP;
       render();
+      // short fade-in so the change is visible
+      gallery.classList.remove("is-switching"); void gallery.offsetWidth; gallery.classList.add("is-switching");
+      // keep the chosen chip in view in the swipe row (phone)
+      filters.scrollTo({ left: chip.offsetLeft - filters.offsetLeft - 16, behavior: "smooth" });
+      // if you were scrolled deep into the gallery, jump back to its top
+      if (wasDeep) {
+        window.scrollTo({ top: galleryDocTop - headerH() - filterBar.offsetHeight - resultCount.offsetHeight - 24, behavior: "smooth" });
+      }
     });
   });
+
+  // Sticky filter bar sits right under the sticky header; add a shadow once it is stuck
+  function headerH() { return document.querySelector(".topbar").offsetHeight; }
+  function setHeaderVar() { document.documentElement.style.setProperty("--header-h", headerH() + "px"); }
+  setHeaderVar();
+  window.addEventListener("resize", setHeaderVar);
+  window.addEventListener("scroll", function () {
+    filterBar.classList.toggle("is-stuck", filterBar.getBoundingClientRect().top <= headerH() + 1 &&
+      gallery.getBoundingClientRect().bottom > headerH() + filterBar.offsetHeight);
+  }, { passive: true });
   // Keep "2 rows" correct when the number of columns changes (rotate phone, resize window)
   var lastCols = 0;
   function onResize() {
@@ -277,8 +309,52 @@
     reveals.forEach(function (el) { el.classList.add("is-in"); });
   }
 
+  // Mobile menu (hamburger)
+  var topbar = document.querySelector(".topbar");
+  var menuBtn = document.getElementById("menuToggle");
+  var sheet = document.getElementById("siteNav");
+  var backdrop = document.getElementById("menuBackdrop");
+  function setMenu(open) {
+    topbar.classList.toggle("is-open", open);
+    backdrop.classList.toggle("is-open", open);
+    document.body.classList.toggle("menu-open", open);
+    menuBtn.setAttribute("aria-expanded", open);
+    menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    sheet.style.transform = "";
+  }
+  backdrop.addEventListener("click", function () { setMenu(false); });
+  document.getElementById("sheetClose").addEventListener("click", function () { setMenu(false); menuBtn.focus(); });
+  // Swipe the sheet down to close it
+  var y0 = null;
+  sheet.addEventListener("touchstart", function (e) {
+    y0 = sheet.scrollTop <= 0 ? e.touches[0].clientY : null;
+  }, { passive: true });
+  sheet.addEventListener("touchmove", function (e) {
+    if (y0 === null) return;
+    var dy = e.touches[0].clientY - y0;
+    if (dy > 0) { sheet.style.transition = "none"; sheet.style.transform = "translateY(" + dy + "px)"; }
+  }, { passive: true });
+  sheet.addEventListener("touchend", function (e) {
+    if (y0 === null) return;
+    var dy = e.changedTouches[0].clientY - y0;
+    sheet.style.transition = "";
+    y0 = null;
+    if (dy > 80) setMenu(false); else sheet.style.transform = "";
+  });
+  menuBtn.addEventListener("click", function () { setMenu(!topbar.classList.contains("is-open")); });
+  document.getElementById("siteNav").addEventListener("click", function (e) {
+    if (e.target.closest("a")) setMenu(false);
+  });
+  document.addEventListener("click", function (e) {
+    if (topbar.classList.contains("is-open") && !topbar.contains(e.target)) setMenu(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && topbar.classList.contains("is-open")) { setMenu(false); menuBtn.focus(); }
+  });
+  window.addEventListener("resize", function () { if (window.innerWidth >= 900) setMenu(false); });
+
   // Highlight current section in nav
-  var links = document.querySelectorAll(".nav a");
+  var links = document.querySelectorAll(".nav a:not(.nav-cta)");
   if ("IntersectionObserver" in window) {
     var spy = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
@@ -286,9 +362,6 @@
         links.forEach(function (a) {
           var on = a.getAttribute("href") === "#" + en.target.id;
           a.classList.toggle("is-current", on);
-          if (on && a.scrollIntoView && window.innerWidth < 900) {
-            a.parentNode.scrollTo({ left: a.offsetLeft - 16, behavior: "smooth" });
-          }
         });
       });
     }, { rootMargin: "-45% 0px -50% 0px" });
