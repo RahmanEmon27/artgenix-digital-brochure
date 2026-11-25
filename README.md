@@ -28,8 +28,8 @@ Folder ta Netlify project `artgenix-digital-brochure`-er shathe linked (`.netlif
 ## Structure
 - `index.html` — cover, Mission, Vision, Training Programs, Creations gallery, Contact
 - `css/style.css` — all styles (breakpoints at 900px and 700px)
-- `js/main.js` — gallery data (`items` list: captions + categories), filters, lightbox, scroll reveal, nav highlight, share button
+- `js/main.js` — gallery data (`cats` = filter categories, `items` = photos), filters, lightbox, scroll reveal, nav highlight, share button
 - `assets/img` — logo, rickshaw, training photos
-- `assets/gallery` — 22 creation photos
+- `assets/gallery/<category>/` — creation photos from `Trifold_brochure/Catagory Photos` (one folder per category); `*-thumb.webp` (640px) for the grid, `*.webp` (1600px) for the lightbox
 - `assets/artgenix-brochure.pdf` — print PDF (download button)
 - `deploy.sh` — deploy script
