@@ -23,7 +23,6 @@
     ["vases/vases-01", 480, 640, "vases"],
     ["vases/vases-02", 480, 640, "vases"],
     ["vases/vases-03", 480, 640, "vases"],
-    ["vases/vases-04", 480, 640, "vases"],
     ["vases/vases-05", 480, 640, "vases"],
     ["vases/vases-06", 480, 640, "vases"],
     ["vases/vases-07", 480, 640, "vases"],
@@ -117,7 +116,8 @@
     ["others/others-39", 480, 640, "others"],
     ["others/others-40", 640, 480, "others"],
     ["others/others-41", 640, 480, "others"],
-    ["others/others-42", 640, 480, "others"]
+    ["others/others-42", 640, 480, "others"],
+    ["others/others-43", 480, 640, "others"]
   ];
 
   // Filter chips (after the "All" chip already in the HTML)
