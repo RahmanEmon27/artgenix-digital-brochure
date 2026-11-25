@@ -312,35 +312,11 @@
   // Mobile menu (hamburger)
   var topbar = document.querySelector(".topbar");
   var menuBtn = document.getElementById("menuToggle");
-  var sheet = document.getElementById("siteNav");
-  var backdrop = document.getElementById("menuBackdrop");
   function setMenu(open) {
     topbar.classList.toggle("is-open", open);
-    backdrop.classList.toggle("is-open", open);
-    document.body.classList.toggle("menu-open", open);
     menuBtn.setAttribute("aria-expanded", open);
     menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-    sheet.style.transform = "";
   }
-  backdrop.addEventListener("click", function () { setMenu(false); });
-  document.getElementById("sheetClose").addEventListener("click", function () { setMenu(false); menuBtn.focus(); });
-  // Swipe the sheet down to close it
-  var y0 = null;
-  sheet.addEventListener("touchstart", function (e) {
-    y0 = sheet.scrollTop <= 0 ? e.touches[0].clientY : null;
-  }, { passive: true });
-  sheet.addEventListener("touchmove", function (e) {
-    if (y0 === null) return;
-    var dy = e.touches[0].clientY - y0;
-    if (dy > 0) { sheet.style.transition = "none"; sheet.style.transform = "translateY(" + dy + "px)"; }
-  }, { passive: true });
-  sheet.addEventListener("touchend", function (e) {
-    if (y0 === null) return;
-    var dy = e.changedTouches[0].clientY - y0;
-    sheet.style.transition = "";
-    y0 = null;
-    if (dy > 80) setMenu(false); else sheet.style.transform = "";
-  });
   menuBtn.addEventListener("click", function () { setMenu(!topbar.classList.contains("is-open")); });
   document.getElementById("siteNav").addEventListener("click", function (e) {
     if (e.target.closest("a")) setMenu(false);
