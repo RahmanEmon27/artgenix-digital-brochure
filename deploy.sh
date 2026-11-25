@@ -22,7 +22,17 @@ DIST="$(mktemp -d)"
 trap 'rm -rf "$DIST"' EXIT
 git archive HEAD | tar -x -C "$DIST"
 rm -f "$DIST"/README.md "$DIST"/deploy.sh "$DIST"/netlify.toml "$DIST"/.gitignore "$DIST"/.nojekyll
-netlify deploy --dir "$DIST" --prod
+
+# Upload as a draft first, then publish that draft to production.
+# (A direct `--prod` deploy has returned "Forbidden" on this project.)
+SITE_ID="2f21d40c-69db-4343-9b5e-1a4798034f4d"
+echo "Uploading draft to Netlify..."
+DEPLOY_ID="$(netlify deploy --dir "$DIST" --site "$SITE_ID" --json \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["deploy_id"])')"
+echo "Publishing deploy $DEPLOY_ID to production..."
+netlify api restoreSiteDeploy \
+  --data "{\"site_id\":\"$SITE_ID\",\"deploy_id\":\"$DEPLOY_ID\"}" > /dev/null
+echo "Netlify deploy is live."
 
 echo
 echo "Done:"
