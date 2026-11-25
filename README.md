@@ -10,9 +10,12 @@ Mobile-responsive web version of the A4 trifold print brochure.
 
 1. **Local-e preview** (ei folder-e):
    ```bash
-   python3 -m http.server 8090
+   ./preview.sh
    ```
-   Browser-e http://localhost:8090 khulun.
+   Server chalu hoye browser-e http://localhost:8090 nije theke khulbe.
+   Edit save korar por browser refresh korlei notun change dekhben.
+   Eki Wi-Fi-te phone theke dekhte terminal-e dekhano `http://<mac-ip>:8090` link ta khulun.
+   Bondho korte `Ctrl+C`.
 2. **File edit korun** (`index.html`, `css/style.css`, `js/main.js`, `assets/…`).
 3. **Deploy:**
    ```bash

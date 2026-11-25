@@ -21,7 +21,7 @@ git push origin main
 DIST="$(mktemp -d)"
 trap 'rm -rf "$DIST"' EXIT
 git archive HEAD | tar -x -C "$DIST"
-rm -f "$DIST"/README.md "$DIST"/deploy.sh "$DIST"/netlify.toml "$DIST"/.gitignore "$DIST"/.nojekyll
+rm -f "$DIST"/README.md "$DIST"/deploy.sh "$DIST"/preview.sh "$DIST"/netlify.toml "$DIST"/.gitignore "$DIST"/.nojekyll
 
 # Upload as a draft first, then publish that draft to production.
 # (A direct `--prod` deploy has returned "Forbidden" on this project.)
